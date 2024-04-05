@@ -10,18 +10,15 @@ st.write('The name on your smoothie will be:', name_on_order)
 cnx = st.connection("snowflake")
 session = cnx.session()
 my_dataframe = session.table("SMOOTHIES.PUBLIC.FRUIT_OPTIONS").select(col('FRUIT_NAME'),col('search_on'))
-#st.dataframe(data=my_dataframe,use_container_width=True)
-#st.stop()  
 
-# convert snowpark dataframe to pandas datfram
-pd_df=my_dataframe.to_pandas()
-#st.dataframe(pd_df)
-#st.stop()
+pd_df = my_dataframe.to_pandas()
+
+ingredients_string = ''  # Initialize ingredients_string outside the if block
+
 ingredients_list = st.multiselect(
-   'choose upto 5 ingredients:',
-   my_dataframe,
-   max_selections= 5
-    
+    'choose upto 5 ingredients:',
+    my_dataframe,
+    max_selections=5
 )
 
 if ingredients_list:
@@ -33,10 +30,8 @@ if ingredients_list:
             fv_df = st.dataframe(data=fruityvice_response.json(), use_container_width=True)
         else:
             st.write("Could not find nutrition information for", fruit_choosen)
-
-
         
-    #st.write(ingredients_string)
+        ingredients_string += fruit_choosen  # Update ingredients_string inside the for loop
 
     my_insert_stmt = """INSERT INTO smoothies.public.orders (ingredients,name_on_order) VALUES ('{}', '{}')""".format(ingredients_string, name_on_order)
     st.write(my_insert_stmt)
@@ -44,9 +39,4 @@ if ingredients_list:
     time_to_insert = st.button('Submit Order')
     if time_to_insert:
         session.sql(my_insert_stmt).collect()
-        st.success('Your Smoothie is ordered ' + name_on_order+ "!" ,icon="✅")
-
-
-
-
-
+        st.success('Your Smoothie is ordered ' + name_on_order + "!", icon="✅")
